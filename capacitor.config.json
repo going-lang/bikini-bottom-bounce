@@ -1,0 +1,10 @@
+{
+  "appId": "com.wrldgames.bikinibottombounce",
+  "appName": "Bikini Bottom Bounce",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  }
+}

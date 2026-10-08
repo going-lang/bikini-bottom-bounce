@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#1aa3d9">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Bikini Bottom Bounce</title>
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/ui/app_icon.png">
+  <link rel="apple-touch-icon" href="assets/ui/app_icon_192.png">
+  <meta name="theme-color" content="#1aa3d9">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/reference-theme.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+  <div id="stage">
+    <canvas id="game-canvas"></canvas>
+
+    <!-- touch zone: sits over the canvas during play; left half = left, right half = right -->
+    <div id="touchzone" class="hidden"></div>
+
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-left">
+        <div class="hud-score"><small>SCORE</small><b id="hud-score">0</b></div>
+        <div class="hud-height"><span id="hud-height">0</span> m</div>
+        <div class="hud-zone" id="hud-zone">Bikini Bottom</div>
+      </div>
+      <div class="hud-right">
+        <button id="btn-pause" class="icon-btn" aria-label="Pause">
+          <span class="pause-ico"><i></i><i></i></span>
+        </button>
+        <div class="hud-coins"><img src="assets/sprites/coin.webp" alt=""><span id="hud-coins">0</span></div>
+      </div>
+      <div id="hud-powers" class="hud-powers"></div>
+      <div id="touch-hint" class="touch-hint">
+        <span>◀ hold</span><span>hold ▶</span>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <!-- OPENING (WRLDgames splash, reference #20) -->
+    <section id="screen-splash" class="screen active">
+      <img class="splash-img" src="assets/ui/splash_wrldgames.jpg" alt="WRLDgames">
+      <button class="splash-skip" id="btn-splash-skip">TAP TO CONTINUE</button>
+    </section>
+
+    <section id="screen-loading" class="screen">
+      <div class="loading-bg"></div>
+      <img class="load-logo" src="assets/ui/logo_main.png" alt="SpongeBob's Bikini Bottom Bounce!">
+      <div class="load-box" id="load-box">
+        <div class="bar"><div id="load-bar-fill"></div></div>
+        <p id="load-text">Loading Bikini Bottom...</p>
+      </div>
+      <button id="btn-start" class="btn big hidden">TAP TO START</button>
+      <div id="load-error" class="load-error hidden">
+        <p>Couldn't load the game assets. Check your connection and try again.</p>
+        <button id="btn-retry" class="btn">RETRY</button>
+      </div>
+    </section>
+
+    <!-- MAIN MENU -->
+    <section id="screen-menu" class="screen">
+      <!-- Main menu in the reference style: logo, equipped hero, PLAY, wooden stats and a wooden nav bar.
+           All values are live (renderMenu); every button is a real control. -->
+      <div class="menu-sea" aria-hidden="true"><div class="menu-sand"></div></div>
+      <div class="menu-top">
+        <span class="pill"><img src="assets/sprites/coin.webp" alt=""><span id="menu-coins">0</span></span>
+        <span class="pill"><img src="assets/sprites/spatula.webp" alt=""><span id="menu-premium">0</span></span>
+      </div>
+      <img class="menu-logo" src="assets/ui/logo_main.png" alt="SpongeBob's Bikini Bottom Bounce!">
+      <img id="menu-hero" class="menu-char" alt="Equipped character">
+      <span id="menu-hero-name" class="hidden"></span>
+      <button class="btn menu-play" data-action="play" aria-label="Play">PLAY</button>
+      <div class="card menu-statcard">
+        <div class="over-grid">
+          <div><small>RUNS</small><b id="menu-stage">0</b></div>
+          <div><small>BEST SCORE</small><b id="menu-best">0</b></div>
+          <div><small>HIGHEST HEIGHT</small><b id="menu-height">0 m</b></div>
+          <div><small>BEST WORLD</small><b id="menu-world">Bikini Bottom</b></div>
+        </div>
+      </div>
+      <nav class="menu-nav card" aria-label="Menu">
+        <button class="menu-navbtn" data-go="shop">SHOP</button>
+        <button class="menu-navbtn" data-go="stages">WORLDS</button>
+        <button class="menu-navbtn" data-go="missions">MISSIONS</button>
+        <button class="menu-navbtn" data-go="achievements">TROPHIES</button>
+        <button class="menu-navbtn" data-go="settings">SETTINGS</button>
+        <button class="menu-navbtn" data-go="howto">HOW TO</button>
+      </nav>
+    </section>
+
+    <!-- WORLDS (endless height bands, read-only) -->
+    <section id="screen-stages" class="screen">
+      <header class="subbar">
+        <button class="btn small" data-go="menu">&lsaquo; BACK</button>
+        <h2>WORLDS</h2>
+      </header>
+      <div id="stage-list" class="stage-list"></div>
+    </section>
+
+    <!-- SHOP -->
+    <section id="screen-shop" class="screen">
+      <header class="subbar">
+        <button class="btn small" data-go="menu">&lsaquo; BACK</button>
+        <h2>SHOP</h2>
+        <div class="wallet">
+          <span class="pill small"><img src="assets/sprites/coin.webp" alt=""><span id="shop-coins">0</span></span>
+          <span class="pill small"><img src="assets/sprites/spatula.webp" alt=""><span id="shop-premium">0</span></span>
+        </div>
+      </header>
+      <nav class="tabs">
+        <button class="tab active" data-tab="characters">CHARACTERS</button>
+        <button class="tab" data-tab="outfits">OUTFITS</button>
+        <button class="tab" data-tab="effects">EFFECTS</button>
+      </nav>
+      <div id="shop-feature" class="shop-feature"></div>
+      <div id="shop-grid" class="grid"></div>
+      <p class="fine">Premium items use golden spatulas that you collect in-game. Nothing is required to be bought.</p>
+      <nav class="menu-nav card" aria-label="Menu">
+        <button class="menu-navbtn" data-action="play">PLAY</button>
+        <button class="menu-navbtn" data-go="missions">MISSIONS</button>
+        <button class="menu-navbtn" data-go="achievements">TROPHIES</button>
+        <button class="menu-navbtn" data-go="shop">SHOP</button>
+      </nav>
+    </section>
+
+    <!-- MISSIONS / ACHIEVEMENTS / STATS -->
+    <section id="screen-missions" class="screen">
+      <header class="subbar">
+        <button class="btn small" data-go="menu">&lsaquo; BACK</button>
+        <h2>PROGRESS</h2>
+        <div class="wallet"><span class="pill small"><img src="assets/sprites/coin.webp" alt=""><span id="mis-coins">0</span></span></div>
+      </header>
+      <nav class="tabs">
+        <button class="tab active" data-mtab="missions">MISSIONS</button>
+        <button class="tab" data-mtab="achievements">ACHIEVEMENTS</button>
+        <button class="tab" data-mtab="stats">STATS</button>
+      </nav>
+      <div id="missions-list" class="list"></div>
+      <div id="achievements-list" class="list hidden"></div>
+      <div id="stats-list" class="list hidden"></div>
+      <nav class="menu-nav card" aria-label="Menu">
+        <button class="menu-navbtn" data-action="play">PLAY</button>
+        <button class="menu-navbtn" data-go="missions">MISSIONS</button>
+        <button class="menu-navbtn" data-go="achievements">TROPHIES</button>
+        <button class="menu-navbtn" data-go="shop">SHOP</button>
+      </nav>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="screen-settings" class="screen">
+      <header class="subbar">
+        <button class="btn small" id="settings-back">&lsaquo; BACK</button>
+        <h2>SETTINGS</h2>
+        <span></span>
+      </header>
+      <div class="panel">
+        <label class="row-slider">
+          <span>Music volume</span>
+          <input type="range" id="set-music" min="0" max="1" step="0.05">
+          <b id="set-music-v"></b>
+        </label>
+        <label class="row-slider">
+          <span>Sound effects</span>
+          <input type="range" id="set-sfx" min="0" max="1" step="0.05">
+          <b id="set-sfx-v"></b>
+        </label>
+        <label class="row-slider">
+          <span>Control sensitivity</span>
+          <input type="range" id="set-sens" min="0.6" max="1.5" step="0.1">
+          <b id="set-sens-v"></b>
+        </label>
+        <label class="row-toggle">
+          <span>Swap left / right controls</span>
+          <input type="checkbox" id="set-swap">
+        </label>
+        <label class="row-toggle">
+          <span>Reduced effects (fewer particles)</span>
+          <input type="checkbox" id="set-reduced">
+        </label>
+        <button class="btn" id="btn-tutorial">REPLAY TUTORIAL</button>
+        <button class="btn danger" id="btn-reset">RESET PROGRESS</button>
+        <p class="fine">Resetting clears coins, unlocks, records and achievements on this device.</p>
+      </div>
+    </section>
+
+    <!-- HOW TO PLAY -->
+    <section id="screen-howto" class="screen">
+      <header class="subbar">
+        <button class="btn small" data-go="menu">&lsaquo; BACK</button>
+        <h2>HOW TO PLAY</h2>
+        <span></span>
+      </header>
+      <div class="panel howto">
+        <div class="howto-item"><b>1. Move</b><span>Touch and hold the LEFT or RIGHT half of the screen. Let go to stop.</span></div>
+        <div class="howto-item"><b>2. Bounce</b><span>SpongeBob jumps automatically. Land on platforms to keep climbing.</span></div>
+        <div class="howto-item"><b>3. Collect</b><span>Coins, bubbles, jellyfish tokens, golden spatulas and treasure chests.</span></div>
+        <div class="howto-item"><b>4. Avoid</b><span>Jellyfish, urchins, sea mines, dangerous bubbles and falling rocks cost half of the coins you collected this run. With no coins left, the run ends.</span></div>
+        <h3>Power-ups</h3>
+        <ul class="howto-list">
+          <li><b>Super Bounce</b> stronger bounces</li>
+          <li><b>Bubble Shield</b> blocks one hit</li>
+          <li><b>Jellyfish Magnet</b> pulls in coins</li>
+          <li><b>Speed Boost</b> faster sideways movement</li>
+          <li><b>Double Coins</b> coins count twice</li>
+          <li><b>Slow Motion</b> enemies slow down</li>
+          <li><b>Coin Guard</b> your next hit costs no coins</li>
+          <li><b>Mega Bounce</b> next bounce launches very high</li>
+        </ul>
+        <h3>Zones</h3>
+        <p class="fine">Bikini Bottom → Jellyfish Fields → Goo Lagoon → Krusty Krab Area → Rock Bottom. Each zone is harder and more challenging.</p>
+      </div>
+    </section>
+
+    <!-- PAUSE -->
+    <div id="modal-pause" class="modal hidden">
+      <div class="card">
+        <h2>PAUSED</h2>
+        <button class="btn big" id="btn-resume">RESUME</button>
+        <button class="btn" id="btn-restart">RESTART</button>
+        <button class="btn" id="btn-pause-settings">SETTINGS</button>
+        <button class="btn" id="btn-quit">QUIT TO HOME</button>
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div id="modal-over" class="modal hidden">
+      <div class="card over">
+        <h2 class="over-title">GAME OVER</h2>
+        <div id="over-record" class="record hidden">NEW RECORD!</div>
+        <p id="over-stage" class="over-stage"></p>
+        <div class="over-grid">
+          <div><small>FINAL SCORE</small><b id="over-score">0</b></div>
+          <div><small>HEIGHT</small><b id="over-height">0 m</b></div>
+          <div><small>COINS</small><b id="over-coins">0</b></div>
+          <div><small>BEST SCORE</small><b id="over-best">0</b></div>
+        </div>
+        <button class="btn big" id="btn-revive">WATCH AD TO REVIVE</button>
+        <button class="link-btn" id="btn-revive-coins">or revive for 100 coins</button>
+        <button class="btn" id="btn-try-again">TRY AGAIN</button>
+        <button class="btn" id="btn-home">HOME</button>
+      </div>
+    </div>
+
+    <!-- REWARDED AD (demo placeholder - see README to connect a real ad network) -->
+    <div id="modal-ad" class="modal hidden">
+      <div class="card ad">
+        <small>ADVERTISEMENT</small>
+        <h2>Demo ad</h2>
+        <p>Rewarded ads are simulated in this build.</p>
+        <div class="ad-timer" id="ad-timer">3</div>
+        <button class="btn hidden" id="btn-ad-close">CLAIM REVIVE</button>
+      </div>
+    </div>
+
+    <!-- TUTORIAL -->
+    <div id="modal-tutorial" class="modal hidden">
+      <div class="card tutorial">
+        <small id="tut-count">1 / 6</small>
+        <img id="tut-img" alt="">
+        <h2 id="tut-title">Move</h2>
+        <p id="tut-text"></p>
+        <div class="dots" id="tut-dots"></div>
+        <div class="tut-buttons">
+          <button class="btn" id="btn-tut-skip">SKIP</button>
+          <button class="btn big" id="btn-tut-next">NEXT</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIRM -->
+    <div id="modal-confirm" class="modal hidden">
+      <div class="card">
+        <h2>Are you sure?</h2>
+        <p id="confirm-text"></p>
+        <button class="btn danger" id="btn-confirm-yes">YES</button>
+        <button class="btn" id="btn-confirm-no">NO</button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
